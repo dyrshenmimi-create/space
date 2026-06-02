@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body { background:#111; overflow:hidden; }
+#info { position:fixed; top:20px; left:50%; transform:translateX(-50%); color:white; font-size:16px; font-family:sans-serif; text-align:center; }
+</style>
+</head>
+<body>
+<div id="info">搖桿數值: 0, 0</div>
+<script>
+const S=130, K=54, jR=(S-K)/2;
+const joy = document.createElement('div');
+joy.style.cssText = `position:fixed;left:24px;bottom:36px;width:${S}px;height:${S}px;border-radius:50%;background:rgba(255,255,255,0.15);border:2px solid rgba(255,255,255,0.4);z-index:999;touch-action:none;`;
+const knob = document.createElement('div');
+knob.style.cssText = `position:absolute;width:${K}px;height:${K}px;border-radius:50%;background:rgba(255,255,255,0.5);left:${(S-K)/2}px;top:${(S-K)/2}px;`;
+joy.appendChild(knob);
+document.body.appendChild(joy);
+
+let tid = null, dx = 0, dy = 0;
+
+joy.addEventListener('touchstart', e => {
+  e.preventDefault();
+  tid = e.changedTouches[0].identifier;
+}, {passive:false});
+
+joy.addEventListener('touchmove', e => {
+  e.preventDefault();
+  for (const t of e.changedTouches) {
+    if (t.identifier !== tid) continue;
+    const r = joy.getBoundingClientRect();
+    let x = t.clientX - r.left - S/2;
+    let y = t.clientY - r.top  - S/2;
+    const d = Math.sqrt(x*x+y*y);
+    if (d > jR) { x=x/d*jR; y=y/d*jR; }
+    dx = x/jR; dy = y/jR;
+    knob.style.left = ((S-K)/2+x)+'px';
+    knob.style.top  = ((S-K)/2+y)+'px';
+    document.getElementById('info').textContent = `搖桿: ${dx.toFixed(2)}, ${dy.toFixed(2)}`;
+  }
+},{passive:false});
+
+joy.addEventListener('touchend', e => {
+  tid=null; dx=0; dy=0;
+  knob.style.left=(S-K)/2+'px'; knob.style.top=(S-K)/2+'px';
+  document.getElementById('info').textContent = '搖桿數值: 0, 0';
+},{passive:false});
+</script>
+</body>
+</html>
